@@ -1028,6 +1028,9 @@ namespace Nekoyume.UI.Module
         public TMP_InputField InputField;
         private void Update()
         {
+
+
+
             if (Input.GetKeyDown(KeyCode.RightArrow))
             {
                 TestDccId++;

@@ -569,5 +569,28 @@ namespace Nekoyume.Game.Avatar
 
             _fadeTweener.Clear();
         }
+
+        public void Update()
+        {
+            if (Input.GetKeyDown(KeyCode.Z))
+            {
+                PlayAnimation("Attack", 0);
+            }
+
+            if (Input.GetKeyDown(KeyCode.X))
+            {
+                PlayAnimation("CriticalAttack", 0);
+            }
+
+            if (Input.GetKeyDown(KeyCode.C))
+            {
+                PlayAnimation("Win", 0);
+            }
+
+            if (Input.GetKeyDown(KeyCode.V))
+            {
+                PlayAnimation("Idle", 0);
+            }
+        }
     }
 }
