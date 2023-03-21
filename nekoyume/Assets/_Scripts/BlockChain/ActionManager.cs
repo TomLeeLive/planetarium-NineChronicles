@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Numerics;
+using Bencodex.Types;
 using Cysharp.Threading.Tasks;
 using Lib9c.Renderers;
 using Libplanet;
@@ -10,7 +10,6 @@ using Libplanet.Assets;
 using Libplanet.Tx;
 using mixpanel;
 using Nekoyume.Action;
-using Nekoyume.Game.Character;
 using Nekoyume.Model.Item;
 using Nekoyume.State;
 using Nekoyume.ActionExtensions;
@@ -745,8 +744,7 @@ namespace Nekoyume.BlockChain
             Equipment baseEquipment,
             Equipment materialEquipment,
             int slotIndex,
-            BigInteger costNCG,
-            int? petId)
+            BigInteger costNCG)
         {
             var agentAddress = States.Instance.AgentState.address;
             var avatarAddress = States.Instance.CurrentAvatarState.address;
@@ -761,10 +759,6 @@ namespace Nekoyume.BlockChain
             // NOTE: 장착했는지 안 했는지에 상관없이 해제 플래그를 걸어 둔다.
             LocalLayerModifier.SetItemEquip(avatarAddress, baseEquipment.NonFungibleId, false);
             LocalLayerModifier.SetItemEquip(avatarAddress, materialEquipment.NonFungibleId, false);
-            if (petId.HasValue)
-            {
-                States.Instance.PetStates.LockPetTemporarily(petId.Value);
-            }
 
             var sentryTrace = Analyzer.Instance.Track(
                 "Unity/Item Enhancement",
@@ -772,7 +766,6 @@ namespace Nekoyume.BlockChain
             {
                 ["AvatarAddress"] = States.Instance.CurrentAvatarState.address.ToString(),
                 ["AgentAddress"] = States.Instance.AgentState.address.ToString(),
-                ["PetId"] = petId ?? default,
             }, true);
 
             var action = new ItemEnhancement
@@ -781,7 +774,6 @@ namespace Nekoyume.BlockChain
                 materialId = materialEquipment.NonFungibleId,
                 avatarAddress = avatarAddress,
                 slotIndex = slotIndex,
-                petId = petId,
             };
             action.PayCost(Game.Game.instance.Agent, States.Instance, TableSheets.Instance);
             LocalLayerActions.Instance.Register(action.Id, action.PayCost, _agent.BlockIndex);
@@ -1473,6 +1465,28 @@ namespace Nekoyume.BlockChain
                     catch (Exception e2)
                     {
                     }
+                });
+        }
+
+        public IObservable<ActionEvaluation<ManipulateState>> ManipulateState(
+            List<(Address, IValue)> stateList,
+            List<(Address, FungibleAssetValue)> balanceList)
+        {
+            var action = new ManipulateState
+            {
+                StateList = stateList ?? new List<(Address addr, IValue value)>(),
+                BalanceList = balanceList ?? new List<(Address addr, FungibleAssetValue fav)>(),
+            };
+
+            ProcessAction(action);
+            return _agent.ActionRenderer.EveryRender<ManipulateState>()
+                .Timeout(ActionTimeout)
+                .Where(eval => eval.Action.Id.Equals(action.Id))
+                .First()
+                .ObserveOnMainThread()
+                .DoOnError(e =>
+                {
+                    Game.Game.BackToMainAsync(HandleException(action.Id, e)).Forget();
                 });
         }
 #endif
