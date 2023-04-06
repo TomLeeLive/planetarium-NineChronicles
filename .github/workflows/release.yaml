@@ -36,7 +36,7 @@ jobs:
       - name: release
         uses: planetarium/9c-toolbelt@main
         with:
-          COMMAND_LIST: "release|player|${{ github.head_ref }}.${{ github.sha }}|1|internal|${{ matrix.targetPlatform }}|${{ secrets.SLACK_INTERNAL }}"
+          COMMAND_LIST: "release|player|${{ github.sha }}|1|internal|${{ matrix.targetPlatform }}|${{ secrets.SLACK_INTERNAL }}"
           ENV: production
           GITHUB_TOKEN: ${{ secrets.P_GITHUB_TOKEN }}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
