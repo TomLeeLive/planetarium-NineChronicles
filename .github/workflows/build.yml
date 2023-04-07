@@ -86,6 +86,7 @@ jobs:
 
   extract:
     if: startsWith(github.ref, 'refs/heads/ci-test/') || startsWith(github.event.ref, 'refs/tags/')
+    needs: build
     runs-on: ubuntu-latest
     outputs:
       network: ${{ steps.extract.outputs.network }}
