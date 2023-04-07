@@ -85,7 +85,7 @@ jobs:
           if-no-files-found: error
 
   extract:
-    if: startsWith(github.ref, 'refs/heads/ci-test/') && startsWith(github.event.ref, 'refs/tags/')
+    if: startsWith(github.ref, 'refs/heads/ci-test/') || startsWith(github.event.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     outputs:
       network: ${{ steps.extract.outputs.network }}
@@ -115,7 +115,7 @@ jobs:
           fi
 
   release:
-    if: startsWith(github.ref, 'refs/heads/ci-test/') && startsWith(github.event.ref, 'refs/tags/')
+    if: startsWith(github.ref, 'refs/heads/ci-test/') || startsWith(github.event.ref, 'refs/tags/')
     runs-on: ubuntu-20.04
     strategy:
       matrix:
