@@ -6,6 +6,7 @@ on:
       - main
       - development
       - rc-v*
+      - feature/bump-lib9c-2023050901
     tags: ["*"]
   pull_request:
     types: [ready_for_review, opened, reopened, auto_merge_enabled]
