@@ -10,6 +10,7 @@ using Nekoyume.UI.Module;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using ZXing;
 using UnityEngine.Android;
 
 namespace Nekoyume.UI
@@ -67,6 +68,9 @@ namespace Nekoyume.UI
         private States _prevState;
         private CapturedImage _capturedImage;
 
+        private WebCamTexture _camTexture; // 이걸로 카메라 텍스쳐 붙여야하는데 아니 뭐 일케까지 귀찮지? 미친 와 대박 존나귀찮다 하지말가
+        public RawImage rawCamImage;
+
         protected override void Awake()
         {
             // Default KeyStore in android is invalid, we should redefine it.
@@ -80,6 +84,13 @@ namespace Nekoyume.UI
                 KeyStore = Web3KeyStore.DefaultKeyStore;
             }
 
+            _camTexture = new WebCamTexture
+            {
+                requestedHeight = Screen.height,
+                requestedWidth = Screen.width
+            };
+            rawCamImage.texture = _camTexture;
+            _camTexture.Play();
             _capturedImage = GetComponentInChildren<CapturedImage>();
             State.Value = States.Show;
             State.Subscribe(SubscribeState).AddTo(gameObject);
@@ -269,11 +280,16 @@ namespace Nekoyume.UI
             {
                 case States.Show:
                     SetState(States.CreateAccount);
-                    _privateKey = new PrivateKey();
-                    SetImage(_privateKey.PublicKey.ToAddress());
+                    // _privateKey = new PrivateKey();
+                    // SetImage(_privateKey.PublicKey.ToAddress());
                     break;
                 case States.CreateAccount:
-                    SetState(States.CreatePassword);
+                    if (_camTexture != null)
+                    {
+                        _camTexture.Play();
+                    }
+                    Login = !(_privateKey is null);
+                    Close();
                     break;
                 case States.CreatePassword:
                     CreateProtectedPrivateKey(_privateKey);
@@ -516,6 +532,27 @@ namespace Nekoyume.UI
             }
 
             UpdateSubmitButton();
+            if (_camTexture.isPlaying)
+            {
+                try
+                {
+                    IBarcodeReader barcodeReader = new BarcodeReader();
+                    barcodeReader.Options.PureBarcode = false;
+                    var result = barcodeReader.Decode(_camTexture.GetPixels32(), _camTexture.width, _camTexture.height);
+                    if (result != null)
+                    {
+                        Debug.LogError(result.Text);
+                        KeyStore.Add(ProtectedPrivateKey.FromJson(result.Text));
+                        _camTexture.Stop();
+                        rawCamImage.gameObject.SetActive(false);
+                        SetState(States.Login);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogError(ex.Message);
+                }
+            }
         }
 
         private bool CheckPrivateKeyHex()

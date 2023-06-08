@@ -166,7 +166,8 @@ namespace Nekoyume.Game
             String[] permission = new String[]
             {
                 Permission.ExternalStorageRead,
-                Permission.ExternalStorageWrite
+                Permission.ExternalStorageWrite,
+                Permission.Camera
             };
 
             while (!HasStoragePermission())
