@@ -186,6 +186,8 @@ namespace Nekoyume.UI
                     loginField.Select();
                     accountAddressText.gameObject.SetActive(true);
                     bg.SetActive(true);
+                    rawCamImage.gameObject.SetActive(false);
+                    _camTexture.Pause();
                     break;
                 case States.FindPassphrase:
                     titleText.gameObject.SetActive(false);
