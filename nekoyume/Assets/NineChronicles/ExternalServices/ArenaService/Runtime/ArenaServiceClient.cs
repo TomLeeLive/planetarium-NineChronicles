@@ -48,17 +48,9 @@ namespace NineChronicles.ExternalServices.ArenaService.Runtime
             Task<(HttpStatusCode code, string? error, string? mediaType, string? content)>
             DummyArenaInfoAsync(int championship, int arenaRound, Address avatarAddr)
         {
-            var reqJson = new JsonObject
-            {
-                {"championship", championship },
-                {"arena_round", arenaRound },
-                {"avatar_addr ", avatarAddr.ToHex() },
-            };
-            var reqContent = new StringContent(
-                reqJson.ToJsonString(JsonSerializerOptions),
-                System.Text.Encoding.UTF8,
-                "application/json");
-            using var res = await _client.PostAsync(_endpoints.DummyArenaMy, reqContent);
+            var uriBuilder = new UriBuilder(_endpoints.DummyArenaMy);
+            uriBuilder.Query = $"championship={championship}&arena_round={arenaRound}&avatar_addr={avatarAddr.ToString()}";
+            using var res = await _client.GetAsync(uriBuilder.Uri);
             return await ProcessResponseAsync(res);
         }
 
@@ -66,17 +58,9 @@ namespace NineChronicles.ExternalServices.ArenaService.Runtime
             Task<(HttpStatusCode code, string? error, string? mediaType, string? content)>
             DummyArenaBoadDataAsync(int championship, int arenaRound, Address avatarAddr)
         {
-            var reqJson = new JsonObject
-            {
-                {"championship", championship },
-                {"arena_round", arenaRound },
-                {"avatar_addr ", avatarAddr.ToHex() },
-            };
-            var reqContent = new StringContent(
-                reqJson.ToJsonString(JsonSerializerOptions),
-                System.Text.Encoding.UTF8,
-                "application/json");
-            using var res = await _client.PostAsync(_endpoints.DummyArenaBoard, reqContent);
+            var uriBuilder = new UriBuilder(_endpoints.DummyArenaBoard);
+            uriBuilder.Query= $"championship={championship}&arena_round={arenaRound}&avatar_addr={avatarAddr.ToString()}";
+            using var res = await _client.GetAsync(uriBuilder.Uri);
             return await ProcessResponseAsync(res);
         }
 

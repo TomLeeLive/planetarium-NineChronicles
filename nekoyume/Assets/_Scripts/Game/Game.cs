@@ -32,6 +32,8 @@ using Nekoyume.UI.Model;
 using Nekoyume.UI.Module.WorldBoss;
 using Nekoyume.UI.Scroller;
 using NineChronicles.ExternalServices.IAPService.Runtime;
+using NineChronicles.ExternalServices.ArenaService.Runtime;
+using NineChronicles.ExternalServices.ArenaService.Runtime.Models;
 using UnityEngine;
 using UnityEngine.Playables;
 using Currency = Libplanet.Types.Assets.Currency;
@@ -100,6 +102,8 @@ namespace Nekoyume.Game
         public IAPStoreManager IAPStoreManager { get; private set; }
 
         public IAPServiceManager IAPServiceManager { get; private set; }
+
+        public ArenaServiceManager ArenaServiceManager { get; private set; }
 
         public Stage Stage => stage;
         public Arena Arena => arena;
@@ -338,8 +342,11 @@ namespace Nekoyume.Game
                     }
                 )
             );
+            Debug.Log("[Game] Start() CoLogin initialized");
 
             yield return new WaitUntil(() => agentInitialized);
+
+            Debug.Log("[Game] Start() agentInitialized");
 
             // NOTE: Create ActionManager after Agent initialized.
             ActionManager = new ActionManager(Agent);
@@ -366,6 +373,12 @@ namespace Nekoyume.Game
             yield return StartCoroutine(new WaitUntil(() => IAPStoreManager.IsInitialized));
             Debug.Log("[Game] Start() IAPStoreManager initialized");
 #endif
+            ArenaServiceManager = new ArenaServiceManager("https://nfu7z7kbve.execute-api.ap-northeast-2.amazonaws.com/development");
+            yield return ArenaServiceManager.InitializeAsync().AsCoroutine();
+            Debug.Log("[Game] Start() ArenaServiceManager initialized");
+
+            yield return ArenaServiceManager.GetDummyArenaBoadDatasAsync(Agent.Address).AsCoroutine();
+
             // Initialize MainCanvas second
             yield return StartCoroutine(MainCanvas.instance.InitializeSecond());
             // Initialize NineChroniclesAPIClient.
