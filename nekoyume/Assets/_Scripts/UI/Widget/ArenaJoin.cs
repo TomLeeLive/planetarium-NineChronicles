@@ -106,10 +106,10 @@ namespace Nekoyume.UI
         {
             var loading = Find<DataLoadingScreen>();
             loading.Show();
-            await UniTask.WhenAll(RxProps.ArenaInfoTuple.UpdateAsync(),
-                RxProps.ArenaParticipantsOrderedWithScore.UpdateAsync(),
-                States.Instance.GrandFinaleStates
-                    .UpdateGrandFinaleParticipantsOrderedWithScoreAsync());
+
+            var arenaDashboad = await Game.Game.instance.ArenaServiceManager.GetDummyArenaBoadDatasAsync(Game.Game.instance.Agent.Address);
+            await UniTask.WhenAll(RxProps.ArenaInfoTuple.UpdateAsync());
+
             loading.Close();
             Show(ignoreShowAnimation);
         }

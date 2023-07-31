@@ -112,6 +112,8 @@ namespace Nekoyume.State
             }
         }
 
+        private const bool ExternalServiceLoad = true;
+
         // TODO!!!! Remove [`_arenaInfoTuple`] and use [`_playersArenaParticipant`] instead.
         private static readonly
             AsyncUpdatableRxProp<(ArenaInformation current, ArenaInformation next)>
@@ -247,31 +249,63 @@ namespace Nekoyume.State
                 return previous;
             }
 
-            var currentArenaInfoAddress = ArenaInformation.DeriveAddress(
-                avatarAddress.Value,
-                currentRoundData.ChampionshipId,
-                currentRoundData.Round);
-            var nextArenaInfoAddress = sheet.TryGetNextRound(blockIndex, out var nextRoundData)
-                ? ArenaInformation.DeriveAddress(
-                    avatarAddress.Value,
-                    nextRoundData.ChampionshipId,
-                    nextRoundData.Round)
-                : default;
-            var dict = await _agent.GetStateBulk(
-                new[]
+            ArenaInformation currentArenaInfo = null;
+            ArenaInformation nextArenaInfo = null;
+
+            if (ExternalServiceLoad)
+            {
+                var currentDummyArenaInfo = await Game.Game.instance.ArenaServiceManager.GetDummyArenaInfoAsync(avatarAddress.Value, currentRoundData.ChampionshipId, currentRoundData.Round);
+                List arenainfoDataList = new List();
+                arenainfoDataList.Add(currentDummyArenaInfo.Addr);
+                arenainfoDataList.Add(currentDummyArenaInfo.Win);
+                arenainfoDataList.Add(currentDummyArenaInfo.Lose);
+                arenainfoDataList.Add(currentDummyArenaInfo.Ticket);
+                arenainfoDataList.Add(currentDummyArenaInfo.TicketResetCount);
+                arenainfoDataList.Add(currentDummyArenaInfo.PurchasedTicketCount);
+                currentArenaInfo = new ArenaInformation(arenainfoDataList);
+
+                if (sheet.TryGetNextRound(blockIndex, out var nextRoundData))
                 {
+                    var nextDummyArenaInfo = await Game.Game.instance.ArenaServiceManager.GetDummyArenaInfoAsync(avatarAddress.Value, nextRoundData.ChampionshipId, nextRoundData.Round);
+                    arenainfoDataList = new List();
+                    arenainfoDataList.Add(currentDummyArenaInfo.Addr);
+                    arenainfoDataList.Add(currentDummyArenaInfo.Win);
+                    arenainfoDataList.Add(currentDummyArenaInfo.Lose);
+                    arenainfoDataList.Add(currentDummyArenaInfo.Ticket);
+                    arenainfoDataList.Add(currentDummyArenaInfo.TicketResetCount);
+                    arenainfoDataList.Add(currentDummyArenaInfo.PurchasedTicketCount);
+                    nextArenaInfo = new ArenaInformation(arenainfoDataList);
+                }
+            }
+            else
+            {
+                var currentArenaInfoAddress = ArenaInformation.DeriveAddress(
+                                                                avatarAddress.Value,
+                                                                currentRoundData.ChampionshipId,
+                                                                currentRoundData.Round);
+                var nextArenaInfoAddress = sheet.TryGetNextRound(blockIndex, out var nextRoundData)
+                    ? ArenaInformation.DeriveAddress(
+                        avatarAddress.Value,
+                        nextRoundData.ChampionshipId,
+                        nextRoundData.Round)
+                    : default;
+                var dict = await _agent.GetStateBulk(
+                    new[]
+                    {
                     currentArenaInfoAddress,
                     nextArenaInfoAddress
-                }
-            );
-            var currentArenaInfo =
-                dict[currentArenaInfoAddress] is List currentList
-                    ? new ArenaInformation(currentList)
-                    : null;
-            var nextArenaInfo =
-                dict[nextArenaInfoAddress] is List nextList
-                    ? new ArenaInformation(nextList)
-                    : null;
+                    }
+                );
+                currentArenaInfo =
+                    dict[currentArenaInfoAddress] is List currentList
+                        ? new ArenaInformation(currentList)
+                        : null;
+                nextArenaInfo =
+                    dict[nextArenaInfoAddress] is List nextList
+                        ? new ArenaInformation(nextList)
+                        : null;
+            }
+
             return (currentArenaInfo, nextArenaInfo);
         }
 

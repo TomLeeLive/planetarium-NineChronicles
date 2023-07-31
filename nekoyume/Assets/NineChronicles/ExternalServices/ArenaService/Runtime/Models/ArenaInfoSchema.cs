@@ -16,6 +16,9 @@ namespace NineChronicles.ExternalServices.ArenaService.Runtime.Models
         [JsonPropertyName("win")]
         public int Win { get; set; }
 
+        [JsonPropertyName("lose")]
+        public int Lose { get; set; }
+
         [JsonPropertyName("ticket")]
         public int Ticket { get; set; }
 
